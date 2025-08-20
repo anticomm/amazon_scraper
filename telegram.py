@@ -36,8 +36,8 @@ def format_product_message(product):
 
 
 def send_to_telegram(products):
-    token = "8424407061:AAGCMvS7wGZ-dAtLtbtdEZ3eqoDOkAWPIjI"  # ← Buraya kendi bot token'ını yaz
-    chat_id = "1390108995"  # ← Buraya kendi chat ID'ni yaz
+    token = ""  # ← Buraya kendi bot token'ını yaz
+    chat_id = ""  # ← Buraya kendi chat ID'ni yaz
     base_url = f"https://api.telegram.org/bot{token}"
 
     for product in products:
