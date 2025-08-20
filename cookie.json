@@ -1,0 +1,14 @@
+import json
+from selenium import webdriver
+
+driver = webdriver.Chrome()
+driver.get("https://site-adresi.com/login")
+
+# Giriş işlemini burada yap (send_keys vs.)
+
+# Giriş tamamlandıktan sonra cookie’leri al
+cookies = driver.get_cookies()
+
+# JSON dosyasına yaz
+with open("cookie.json", "w") as f:
+    json.dump(cookies, f)
