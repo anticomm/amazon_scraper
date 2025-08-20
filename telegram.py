@@ -2,17 +2,16 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
-
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 if not BOT_TOKEN or not CHAT_ID:
-    raise ValueError("BOT_TOKEN veya CHAT_ID .env dosyasında tanımlı değil.")
-
-BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
-
-
+    print("⚠️ Telegram ayarları eksik, mesaj gönderilmeyecek.")
+    def send_to_telegram(msg): pass  # dummy fonksiyon
+else:
+    def send_to_telegram(msg):
+        # gerçek gönderim kodu
+        
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
