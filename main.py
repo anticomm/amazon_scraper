@@ -1,7 +1,5 @@
 import json
 from browser import get_html_from_brave
-from fetcher import batch_price_fetch
-
 from parser import parse_products
 from telegram import send_to_telegram
 
