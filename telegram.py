@@ -1,4 +1,17 @@
+import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
+
+if not BOT_TOKEN or not CHAT_ID:
+    raise ValueError("BOT_TOKEN veya CHAT_ID .env dosyasında tanımlı değil.")
+
+BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+
 
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
@@ -33,13 +46,7 @@ def format_product_message(product):
     )
 
 
-
-
 def send_to_telegram(products):
-    token = ""  # ← Buraya kendi bot token'ını yaz
-    chat_id = ""  # ← Buraya kendi chat ID'ni yaz
-    base_url = f"https://api.telegram.org/bot{token}"
-
     for product in products:
         message = format_product_message(product)
         image_url = product.get("image")
@@ -47,22 +54,26 @@ def send_to_telegram(products):
         if image_url and image_url.startswith("http"):
             # Görselli gönderim
             payload = {
-                "chat_id": chat_id,
+                "chat_id": CHAT_ID,
                 "photo": image_url,
                 "caption": message,
                 "parse_mode": "Markdown"
             }
-            response = requests.post(f"{base_url}/sendPhoto", data=payload)
+            endpoint = f"{BASE_URL}/sendPhoto"
         else:
             # Görsel yoksa metin gönderimi
             payload = {
-                "chat_id": chat_id,
+                "chat_id": CHAT_ID,
                 "text": message,
                 "parse_mode": "Markdown"
             }
-            response = requests.post(f"{base_url}/sendMessage", data=payload)
+            endpoint = f"{BASE_URL}/sendMessage"
 
-        if response.status_code == 200:
-            print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
-        else:
-            print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.text}")
+        try:
+            response = requests.post(endpoint, data=payload)
+            if response.status_code == 200:
+                print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
+            else:
+                print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.text}")
+        except Exception as e:
+            print(f"⚠️ İstek hatası: {e}")
