@@ -3,28 +3,38 @@ from browser import get_html_from_brave
 from parser import parse_products, batch_price_fetch
 from telegram import send_to_telegram
 
-# Daha önce gönderilen ürünleri yükle
-try:
-    with open("sent_products.json", "r", encoding="utf-8") as f:
-        sent_titles = json.load(f)
-except FileNotFoundError:
-    sent_titles = []
+def load_sent_titles(path="sent_products.json"):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
 
-# HTML çekimi ve ürün parse
-html = get_html_from_brave()
-products = parse_products(html)
-products = batch_price_fetch(products)
+def save_sent_titles(titles, path="sent_products.json"):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(titles, f, ensure_ascii=False, indent=2)
 
-# Yeni ürünleri filtrele
-new_products = [p for p in products if p["title"] not in sent_titles]
+def main():
+    print("🔄 Amazon sayfasından HTML çekiliyor...")
+    html = get_html_from_brave()
 
-if new_products:
-    send_to_telegram(new_products)
-    print(f"📨 {len(new_products)} yeni ürün Telegram'a gönderildi.")
+    print("🔍 Ürünler parse ediliyor...")
+    products = parse_products(html)
 
-    # Gönderilenleri kaydet
-    sent_titles.extend([p["title"] for p in new_products])
-    with open("sent_products.json", "w", encoding="utf-8") as f:
-        json.dump(sent_titles, f, ensure_ascii=False, indent=2)
-else:
-    print("🚫 Yeni ürün bulunamadı veya hepsi daha önce gönderilmiş.")
+    print("💰 Fiyatlar kontrol ediliyor...")
+    products = batch_price_fetch(products)
+
+    sent_titles = load_sent_titles()
+    new_products = [p for p in products if p["title"] not in sent_titles]
+
+    if new_products:
+        send_to_telegram(new_products)
+        print(f"📨 {len(new_products)} yeni ürün Telegram'a gönderildi.")
+
+        sent_titles.extend([p["title"] for p in new_products])
+        save_sent_titles(sent_titles)
+    else:
+        print("🚫 Yeni ürün bulunamadı veya hepsi daha önce gönderilmiş.")
+
+if __name__ == "__main__":
+    main()
