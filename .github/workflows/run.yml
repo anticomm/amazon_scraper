@@ -2,7 +2,8 @@ name: Amazon Scraper Otomatik Çalıştırma
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saat başı
+    - cron: '*/5 * * * *'
+  # Her saat başı
   workflow_dispatch:
 
 jobs:
