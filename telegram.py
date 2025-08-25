@@ -8,44 +8,41 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-if not BOT_TOKEN or not CHAT_ID:
-    print("⚠️ Telegram ayarları eksik, mesaj gönderilmeyecek.")
+def send_to_telegram(products):
+    if not BOT_TOKEN or not CHAT_ID:
+        print("⚠️ Telegram ayarları eksik, mesaj gönderilmeyecek.")
+        return
 
-    def send_to_telegram(msg):
-        pass  # dummy fonksiyon
-else:
-    def send_to_telegram(products):
-        for product in products:
-            message = format_product_message(product)
-            image_url = product.get("image")
+    for product in products:
+        message = format_product_message(product)
+        image_url = product.get("image")
 
-            if image_url and image_url.startswith("http"):
-                # Görselli gönderim
-                payload = {
-                    "chat_id": CHAT_ID,
-                    "photo": image_url,
-                    "caption": message,
-                    "parse_mode": "Markdown"
-                }
-                endpoint = f"{BASE_URL}/sendPhoto"
+        if image_url and image_url.startswith("http"):
+            # Görselli gönderim
+            payload = {
+                "chat_id": CHAT_ID,
+                "photo": image_url,
+                "caption": message,
+                "parse_mode": "Markdown"
+            }
+            endpoint = f"{BASE_URL}/sendPhoto"
+        else:
+            # Görsel yoksa metin gönderimi
+            payload = {
+                "chat_id": CHAT_ID,
+                "text": message,
+                "parse_mode": "Markdown"
+            }
+            endpoint = f"{BASE_URL}/sendMessage"
+
+        try:
+            response = requests.post(endpoint, data=payload)
+            if response.status_code == 200:
+                print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
             else:
-                # Görsel yoksa metin gönderimi
-                payload = {
-                    "chat_id": CHAT_ID,
-                    "text": message,
-                    "parse_mode": "Markdown"
-                }
-                endpoint = f"{BASE_URL}/sendMessage"
-
-            try:
-                response = requests.post(endpoint, data=payload)
-                if response.status_code == 200:
-                    print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
-                else:
-                    print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.text}")
-            except Exception as e:
-                print(f"⚠️ İstek hatası: {e}")
-
+                print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.text}")
+        except Exception as e:
+            print(f"⚠️ İstek hatası: {e}")
 
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
@@ -57,7 +54,7 @@ def format_product_message(product):
     specs = product.get("specs", [])
 
     # Fiyat biçimlendirme
-    if "TL" not in price:
+    if "TL" not in price and "₺" not in price:
         price = f"{price} TL"
 
     # İndirim ve puan
