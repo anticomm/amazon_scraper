@@ -11,19 +11,24 @@ def load_cookies(driver, path="cookies.json"):
     if not os.path.exists(path):
         print("🍪 Cookie dosyası bulunamadı.")
         return
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         cookies = json.load(f)
     for cookie in cookies:
+        cookie.pop("sameSite", None)  # Selenium bazen bunu istemez
         driver.add_cookie(cookie)
     print("✅ Cookie'ler yüklendi.")
 
 def save_cookies(driver, path="cookies.json"):
     cookies = driver.get_cookies()
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(cookies, f)
     print("💾 Cookie'ler kaydedildi.")
 
-def get_html_from_brave():
+def get_html_from_brave(
+    url="https://www.amazon.com.tr/deals?ref_=nav_cs_gb",
+    cookie_path="cookies.json",
+    dump_path="amazon_brave_dump.html"
+):
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -37,7 +42,7 @@ def get_html_from_brave():
     driver.get("https://www.amazon.com.tr")
     time.sleep(2)
 
-    load_cookies(driver)
+    load_cookies(driver, path=cookie_path)
     driver.refresh()
     time.sleep(2)
 
@@ -52,7 +57,7 @@ def get_html_from_brave():
     driver.execute_script("document.body.dispatchEvent(new Event('mousemove'));")
     time.sleep(1)
 
-    driver.get("https://www.amazon.com.tr/deals?ref_=nav_cs_gb")
+    driver.get(url)
     time.sleep(10)
 
     for i in range(0, 5000, 500):
@@ -67,9 +72,9 @@ def get_html_from_brave():
         print("⚠️ Fiyat alanı DOM'da bulunamadı.")
 
     html = driver.page_source
-    with open("amazon_brave_dump.html", "w", encoding="utf-8") as f:
+    with open(dump_path, "w", encoding="utf-8") as f:
         f.write(html)
 
-    save_cookies(driver)
+    save_cookies(driver, path=cookie_path)
     driver.quit()
     return html
