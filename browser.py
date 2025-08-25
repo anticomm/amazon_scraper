@@ -1,4 +1,6 @@
+import time
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 def get_html_from_brave():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
