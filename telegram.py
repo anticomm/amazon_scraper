@@ -2,6 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
+# .env dosyasını yükle
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
