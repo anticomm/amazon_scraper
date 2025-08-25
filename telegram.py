@@ -1,6 +1,5 @@
 import os
 import requests
-import re
 from dotenv import load_dotenv
 
 # .env dosyasını yükle
@@ -11,7 +10,6 @@ CHAT_ID = os.getenv("CHAT_ID")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 def escape_md(text):
-    # MarkdownV2 için özel karakterleri kaçır
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     return ''.join(['\\' + c if c in escape_chars else c for c in str(text)])
 
@@ -21,11 +19,13 @@ def send_to_telegram(products):
         return
 
     for product in products:
+        print("📦 Ürün verisi:")
+        print(product)
+
         message = format_product_message(product)
         image_url = product.get("image")
 
         if image_url and image_url.startswith("http"):
-            # Görselli gönderim
             payload = {
                 "chat_id": CHAT_ID,
                 "photo": image_url,
@@ -34,7 +34,6 @@ def send_to_telegram(products):
             }
             endpoint = f"{BASE_URL}/sendPhoto"
         else:
-            # Görsel yoksa metin gönderimi
             payload = {
                 "chat_id": CHAT_ID,
                 "text": message,
@@ -52,16 +51,18 @@ def send_to_telegram(products):
             print(f"⚠️ İstek hatası: {e}")
 
 def format_product_message(product):
-    title = escape_md(product.get("title", "🛍️ Ürün adı bulunamadı"))
-
     raw_price = product.get("price", "Fiyat alınamadı")
+    raw_link = product.get("link", "#")
+
+    print(f"💰 raw_price: {raw_price}")
+    print(f"🔗 raw_link: {raw_link}")
+
+    title = escape_md(product.get("title", "🛍️ Ürün adı bulunamadı"))
     price = escape_md(raw_price)
     if "TL" not in raw_price and "₺" not in raw_price:
         price += "\\ TL"
 
-    raw_link = product.get("link", "#")
     link_text = escape_md("🔥🔥 FIRSATA GİT 🔥🔥")
-    # Link URL'si kaçırılmaz, sadece metin kısmı kaçırılır
     link_satiri = f"🔗 [{link_text}]({raw_link})" if raw_link.startswith("http") else "🔗 Link bulunamadı"
 
     discount = product.get("discount", "")
@@ -82,3 +83,21 @@ def format_product_message(product):
         f"💰 *{price}*\n"
         f"{link_satiri}"
     )
+
+# 🔧 Test için örnek ürün
+if __name__ == "__main__":
+    products = [{
+        "title": "Levi's 511 Slim Jean Pantolon Erkek",
+        "price": "899",
+        "link": "https://example.com/levis-511",
+        "image": "https://example.com/image.jpg",
+        "discount": "30",
+        "rating": "4.8",
+        "colors": [
+            {"color": "Blues (0051)"},
+            {"color": "Mavi (Rock Cod 1786)"},
+            {"color": "Açık Indigo (5550)"}
+        ],
+        "specs": ["Slim Fit", "%100 Pamuk", "Makinede yıkanabilir"]
+    }]
+    send_to_telegram(products)
