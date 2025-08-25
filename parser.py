@@ -33,7 +33,8 @@ def parse_products(html):
                 'href': swatch['href']
             })
 
-        if title and price:
+        # Ürün geçerli mi?
+        if title and price and link:
             products.append({
                 "asin": asin,
                 "title": title,
@@ -48,22 +49,18 @@ def parse_products(html):
 
 def extract_price(card):
     try:
-        price_whole = card.select_one(".a-price-whole")
-        price_fraction = card.select_one(".a-price-fraction")
-
-        if price_whole:
-            return f"{price_whole.text.strip()},{price_fraction.text.strip() if price_fraction else '00'} ₺"
-
-        alt_price = card.select_one("span[aria-hidden='true']")
-        if alt_price and ("TL" in alt_price.text or "₺" in alt_price.text):
-            return alt_price.text.strip()
-
+        # En güvenilir kaynak: .a-offscreen
         offscreen = card.select_one(".a-offscreen")
         if offscreen:
             text = offscreen.text.strip()
-            for prefix in ["Fırsatın Fiyatı:", "Fırsat kapsamında:", "İndirimli fiyat:", "Fiyat:"]:
-                text = text.replace(prefix, "").strip()
-            return text
+            if any(c.isdigit() for c in text) and ("TL" in text or "₺" in text):
+                return text.replace(",", ".").replace("TL", "₺").strip()
+
+        # Alternatif: .a-price-whole + .a-price-fraction
+        price_whole = card.select_one(".a-price-whole")
+        price_fraction = card.select_one(".a-price-fraction")
+        if price_whole:
+            return f"{price_whole.text.strip()},{price_fraction.text.strip() if price_fraction else '00'} ₺"
 
     except Exception as e:
         print("Fiyat parse hatası:", e)
@@ -73,11 +70,13 @@ def extract_price(card):
 def extract_product_link(card):
     link_tag = card.select_one("a[href]")
     if link_tag:
-        return "https://www.amazon.com.tr" + link_tag['href']
+        href = link_tag['href']
+        return href if href.startswith("http") else "https://www.amazon.com.tr" + href
     return None
 
 def batch_price_fetch(products):
     for product in products:
-        if not product.get("price") or "bulunamadı" in product["price"]:
+        price = product.get("price", "")
+        if not price or "bulunamadı" in price.lower() or "güncellenemedi" in price.lower():
             product["price"] = "Fiyat güncellenemedi"
     return products
