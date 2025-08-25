@@ -1,6 +1,28 @@
 import time
+import json
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+def load_cookies(driver, path="cookies.json"):
+    if not os.path.exists(path):
+        print("🍪 Cookie dosyası bulunamadı.")
+        return
+    with open(path, "r") as f:
+        cookies = json.load(f)
+    for cookie in cookies:
+        driver.add_cookie(cookie)
+    print("✅ Cookie'ler yüklendi.")
+
+def save_cookies(driver, path="cookies.json"):
+    cookies = driver.get_cookies()
+    with open(path, "w") as f:
+        json.dump(cookies, f)
+    print("💾 Cookie'ler kaydedildi.")
+
 def get_html_from_brave():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
