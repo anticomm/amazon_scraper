@@ -19,8 +19,7 @@ def parse_products(html):
         badge = badge_tag.text.strip() if badge_tag else None
 
         # Link
-        link_tag = card.select_one('a[data-testid="product-card-link"]')
-        link = link_tag['href'] if link_tag else None
+        link = extract_product_link(card)
 
         # Görsel
         image_tag = card.select_one('img')
@@ -47,42 +46,38 @@ def parse_products(html):
 
     return products
 
-def extract_price(item):
-    # Klasik yapı
-    price_whole = item.select_one(".a-price-whole")
-    price_fraction = item.select_one(".a-price-fraction")
-    if price_whole:
-        return f"{price_whole.text.strip()},{price_fraction.text.strip() if price_fraction else '00'} ₺"
+def extract_price(card):
+    try:
+        price_whole = card.select_one(".a-price-whole")
+        price_fraction = card.select_one(".a-price-fraction")
 
-    # aria-hidden fallback
-    alt_price = item.select_one("span[aria-hidden='true']")
-    if alt_price and ("TL" in alt_price.text or "₺" in alt_price.text):
-        return alt_price.text.strip()
+        if price_whole:
+            return f"{price_whole.text.strip()},{price_fraction.text.strip() if price_fraction else '00'} ₺"
 
-    # a-offscreen fallback (sadece fiyat içeren metinleri al)
-    offscreen = item.select_one(".a-offscreen")
-    if offscreen:
-        text = offscreen.text.strip()
-        if any(x in text for x in ["TL", "₺", "Fiyat"]):
+        alt_price = card.select_one("span[aria-hidden='true']")
+        if alt_price and ("TL" in alt_price.text or "₺" in alt_price.text):
+            return alt_price.text.strip()
+
+        offscreen = card.select_one(".a-offscreen")
+        if offscreen:
+            text = offscreen.text.strip()
             for prefix in ["Fırsatın Fiyatı:", "Fırsat kapsamında:", "İndirimli fiyat:", "Fiyat:"]:
                 text = text.replace(prefix, "").strip()
             return text
 
-    return "Fiyat bulunamadı"
-def extract_price(product_box):
-    try:
-        price = product_box.select_one(".a-price-whole")
-        if price:
-            return price.text.strip()
-        # Fallback: .a-offscreen
-        fallback_price = product_box.select_one(".a-offscreen")
-        if fallback_price:
-            return fallback_price.text.strip()
     except Exception as e:
         print("Fiyat parse hatası:", e)
-    return None
-def extract_product_link(product_box):
-    link_tag = product_box.select_one("a[href]")
+
+    return "Fiyat bulunamadı"
+
+def extract_product_link(card):
+    link_tag = card.select_one("a[href]")
     if link_tag:
         return "https://www.amazon.com.tr" + link_tag['href']
     return None
+
+def batch_price_fetch(products):
+    for product in products:
+        if not product.get("price") or "bulunamadı" in product["price"]:
+            product["price"] = "Fiyat güncellenemedi"
+    return products
