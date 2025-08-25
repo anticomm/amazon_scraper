@@ -1,3 +1,4 @@
+from selenium import webdriver
 def get_html_from_brave():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
