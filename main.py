@@ -1,6 +1,6 @@
 import json
 from browser import get_html_from_brave
-from parser import parse_products
+from parser import parse_products, batch_price_fetch
 from telegram import send_to_telegram
 
 # Daha önce gönderilen ürünleri yükle
