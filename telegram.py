@@ -12,7 +12,8 @@ BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 def escape_md(text):
     # MarkdownV2 için özel karakterleri kaçır
-    return re.sub(r'([_*\[\]()~`>#+\-=|{}.!])', r'\\\1', str(text))
+    escape_chars = r"_*[]()~`>#+-=|{}.!"
+    return ''.join(['\\' + c if c in escape_chars else c for c in str(text)])
 
 def send_to_telegram(products):
     if not BOT_TOKEN or not CHAT_ID:
@@ -52,22 +53,25 @@ def send_to_telegram(products):
 
 def format_product_message(product):
     title = escape_md(product.get("title", "🛍️ Ürün adı bulunamadı"))
-    price = escape_md(product.get("price", "Fiyat alınamadı"))
-    link = product.get("link", "#")
+    raw_price = product.get("price", "Fiyat alınamadı")
+    price = escape_md(raw_price)
+    if "TL" not in raw_price and "₺" not in raw_price:
+        price += "\\ TL"  # TL'yi kaçırarak ekle
+
+    raw_link = product.get("link", "#")
+    safe_link = escape_md(raw_link)
+    link_text = escape_md("🔥🔥 FIRSATA GİT 🔥🔥")
+    link_satiri = f"🔗 [{link_text}]({safe_link})" if raw_link.startswith("http") else "🔗 Link bulunamadı"
+
     discount = product.get("discount", "")
     rating = product.get("rating", "")
     colors = product.get("colors", [])
     specs = product.get("specs", [])
 
-    if "TL" not in price and "₺" not in price:
-        price += " TL"
-
     indirimbilgi = f"%{escape_md(discount)}" if discount and discount.isdigit() else ""
     stars = f"⭐ {escape_md(rating)}" if rating else ""
     renkler = ", ".join([escape_md(c["color"]) for c in colors]) if colors else None
     teknik = "\n".join([f"▫️ {escape_md(spec)}" for spec in specs]) if specs else ""
-
-    link_satiri = f"🔗 [🔥🔥 FIRSATA GİT 🔥🔥]({link})" if link.startswith("http") else "🔗 Link bulunamadı"
 
     return (
         f"*{title}*\n"
