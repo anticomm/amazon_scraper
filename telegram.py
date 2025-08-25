@@ -53,15 +53,16 @@ def send_to_telegram(products):
 
 def format_product_message(product):
     title = escape_md(product.get("title", "🛍️ Ürün adı bulunamadı"))
+
     raw_price = product.get("price", "Fiyat alınamadı")
     price = escape_md(raw_price)
     if "TL" not in raw_price and "₺" not in raw_price:
-        price += "\\ TL"  # TL'yi kaçırarak ekle
+        price += "\\ TL"
 
     raw_link = product.get("link", "#")
-    safe_link = escape_md(raw_link)
     link_text = escape_md("🔥🔥 FIRSATA GİT 🔥🔥")
-    link_satiri = f"🔗 [{link_text}]({safe_link})" if raw_link.startswith("http") else "🔗 Link bulunamadı"
+    # Link URL'si kaçırılmaz, sadece metin kısmı kaçırılır
+    link_satiri = f"🔗 [{link_text}]({raw_link})" if raw_link.startswith("http") else "🔗 Link bulunamadı"
 
     discount = product.get("discount", "")
     rating = product.get("rating", "")
