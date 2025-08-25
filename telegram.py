@@ -11,7 +11,7 @@ if not BOT_TOKEN or not CHAT_ID:
 else:
     def send_to_telegram(msg):
         # gerçek gönderim kodu
-        
+    
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
@@ -20,21 +20,21 @@ def format_product_message(product):
     rating = product.get("rating", "")
     colors = product.get("colors", [])
     specs = product.get("specs", [])
-
+    
     # Fiyat biçimlendirme
     if "TL" not in price:
-        price = f"{price} TL"
-
+    price = f"{price} TL"
+    
     # İndirim ve puan
     indirimbilgi = f"%{discount}" if discount and discount.isdigit() else ""
     stars = f"⭐ {rating}" if rating else ""
-
+    
     # Renkler
     renkler = ", ".join([c["color"] for c in colors]) if colors else None
-
+    
     # Teknik özellikler
     teknik = "\n".join([f"▫️ {spec}" for spec in specs]) if specs else ""
-
+    
     return (
         f"*{title}*\n"
         f"{indirimbilgi}  {stars}\n"
@@ -43,13 +43,13 @@ def format_product_message(product):
         f"💰 *{price}*\n"
         f"🔗 [🔥🔥 FIRSATA GİT 🔥🔥]({link})"
     )
-
-
+    
+    
 def send_to_telegram(products):
     for product in products:
         message = format_product_message(product)
         image_url = product.get("image")
-
+    
         if image_url and image_url.startswith("http"):
             # Görselli gönderim
             payload = {
@@ -67,7 +67,7 @@ def send_to_telegram(products):
                 "parse_mode": "Markdown"
             }
             endpoint = f"{BASE_URL}/sendMessage"
-
+    
         try:
             response = requests.post(endpoint, data=payload)
             if response.status_code == 200:
