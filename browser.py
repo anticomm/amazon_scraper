@@ -1,6 +1,7 @@
 import time
 import json
 import os
+import base64
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -8,14 +9,25 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 def load_cookies(driver, path="cookie.json"):
-    full_path = os.path.join(os.getcwd(), path)
-    if not os.path.exists(full_path):
-        print(f"🍪 Cookie dosyası bulunamadı: {full_path}")
-        return
-    with open(full_path, "r", encoding="utf-8") as f:
-        cookies = json.load(f)
+    cookie_b64 = os.getenv("COOKIE_B64")
+    if cookie_b64:
+        print("🔐 Cookie'ler GitHub Secrets üzerinden yükleniyor...")
+        try:
+            cookie_str = base64.b64decode(cookie_b64).decode("utf-8")
+            cookies = json.loads(cookie_str)
+        except Exception as e:
+            print(f"❌ Cookie decode hatası: {e}")
+            return
+    else:
+        full_path = os.path.join(os.getcwd(), path)
+        if not os.path.exists(full_path):
+            print(f"🍪 Cookie dosyası bulunamadı: {full_path}")
+            return
+        with open(full_path, "r", encoding="utf-8") as f:
+            cookies = json.load(f)
+
     for cookie in cookies:
-        cookie.pop("sameSite", None)  # Selenium bazı versiyonlarda bunu kabul etmiyor
+        cookie.pop("sameSite", None)
         driver.add_cookie(cookie)
     print("✅ Cookie'ler yüklendi.")
 
