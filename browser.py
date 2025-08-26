@@ -1,21 +1,27 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
 import json
+import base64
 
-def load_cookies(driver, path="cookie.json"):
-    if not os.path.exists(path):
-        print("🚫 Cookie dosyası bulunamadı.")
+def load_cookies(driver):
+    encoded = os.getenv("COOKIE_BASE64")
+    if not encoded:
+        print("🚫 COOKIE_BASE64 Secret bulunamadı.")
         return
 
-    with open(path, "r", encoding="utf-8") as f:
-        cookies = json.load(f)
-
-    for cookie in cookies:
-        driver.add_cookie(cookie)
-    print("✅ Cookie'ler yüklendi.")
+    try:
+        decoded = base64.b64decode(encoded).decode("utf-8")
+        cookies = json.loads(decoded)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+        print("✅ Cookie'ler Secret üzerinden yüklendi.")
+    except Exception as e:
+        print("⚠️ Cookie yükleme hatası:", e)
 
 def get_html_from_brave():
     options = Options()
@@ -32,9 +38,8 @@ def get_html_from_brave():
     time.sleep(2)
 
     load_cookies(driver)
-    driver.get(url)
-    time.sleep(5)
 
+    driver.get(url)
     try:
         # Çerez onay butonu varsa tıkla
         consent = driver.find_elements(By.ID, "sp-cc-accept")
@@ -45,6 +50,15 @@ def get_html_from_brave():
             print("ℹ️ Çerez onay butonu görünmedi veya tıklanamadı.")
     except Exception as e:
         print("⚠️ Çerez onayı sırasında hata:", e)
+
+    try:
+        # Fiyat alanı DOM'a girene kadar bekle
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "a-price"))
+        )
+        print("✅ Fiyat alanı DOM'da bulundu.")
+    except Exception:
+        print("⚠️ Fiyat alanı DOM'da bulunamadı.")
 
     html = driver.page_source
 
