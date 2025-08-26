@@ -15,20 +15,21 @@ def save_sent_titles(titles, path="sent_products.json"):
         json.dump(titles, f, ensure_ascii=False, indent=2)
 
 def main():
-    print("🔄 Amazon sayfalarından HTML çekiliyor...")
-    html_list = get_html_from_brave()  # Artık birden fazla sayfa dönebilir
+    print("🔄 Amazon sayfasından HTML çekiliyor...")
+    html = get_html_from_brave()  # Artık tek sayfa
 
-    all_products = []
-    for index, html in enumerate(html_list):
-        print(f"🔍 [{index}] Sayfa parse ediliyor...")
-        products = parse_products(html)
-        all_products.extend(products)
+    if not html:
+        print("🚫 HTML içeriği alınamadı.")
+        return
+
+    print("🔍 Ürünler parse ediliyor...")
+    products = parse_products(html)
 
     print("💰 Fiyatlar kontrol ediliyor...")
-    all_products = batch_price_fetch(all_products)
+    products = batch_price_fetch(products)
 
     sent_titles = load_sent_titles()
-    new_products = [p for p in all_products if p["title"] not in sent_titles]
+    new_products = [p for p in products if p["title"] not in sent_titles]
 
     if new_products:
         send_to_telegram(new_products)
