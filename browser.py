@@ -44,9 +44,8 @@ def get_html_from_brave(
         "https://www.amazon.com.tr/b?node=60456712031"
     ],
     cookie_path="cookie.json",
-    dump_path="amazon_brave_dump.html"
-)
-
+    dump_prefix="amazon_brave_dump"
+):
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -75,24 +74,28 @@ def get_html_from_brave(
     driver.execute_script("document.body.dispatchEvent(new Event('mousemove'));")
     time.sleep(1)
 
-    driver.get(url)
-    time.sleep(10)
+    for index, url in enumerate(urls):
+        print(f"\n🌐 Sayfa açılıyor: {url}")
+        driver.get(url)
+        time.sleep(10)
 
-    for i in range(0, 5000, 500):
-        driver.execute_script(f"window.scrollTo(0, {i});")
-        time.sleep(0.5)
+        for i in range(0, 5000, 500):
+            driver.execute_script(f"window.scrollTo(0, {i});")
+            time.sleep(0.5)
 
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".a-price-whole"))
-        )
-    except:
-        print("⚠️ Fiyat alanı DOM'da bulunamadı.")
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".a-price-whole"))
+            )
+        except:
+            print("⚠️ Fiyat alanı DOM'da bulunamadı.")
 
-    html = driver.page_source
-    with open(dump_path, "w", encoding="utf-8") as f:
-        f.write(html)
+        html = driver.page_source
+        dump_path = f"{dump_prefix}_{index}.html"
+        with open(dump_path, "w", encoding="utf-8") as f:
+            f.write(html)
+        print(f"📄 Dump alındı: {dump_path}")
 
     save_cookies(driver, path=cookie_path)
     driver.quit()
-    return html
+    print("\n✅ Tüm sayfalar başarıyla dump edildi.")
