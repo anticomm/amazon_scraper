@@ -39,10 +39,14 @@ def save_cookies(driver, path="cookie.json"):
     print("💾 Cookie'ler kaydedildi.")
 
 def get_html_from_brave(
-    url="https://www.amazon.com.tr/deals?ref_=nav_cs_gb",
+    urls=[
+        "https://www.amazon.com.tr/deals?ref_=nav_cs_gb",
+        "https://www.amazon.com.tr/b?node=60456712031"
+    ],
     cookie_path="cookie.json",
     dump_path="amazon_brave_dump.html"
-):
+)
+
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
