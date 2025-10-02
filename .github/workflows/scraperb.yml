@@ -53,5 +53,5 @@ jobs:
         run: |
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/anticomm/ilan/actions/workflows/scraperc.yml/dispatches \
+            https://api.github.com/repos/anticomm/amazon_scraper/actions/workflows/scraperc.yml/dispatches \
             -d '{"ref":"main"}' || echo "⚠️ Scraper C tetiklenemedi ama zincir devam ediyor"
