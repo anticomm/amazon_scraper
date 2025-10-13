@@ -13,7 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
-
+from capture import run_capture
 URL = "https://www.amazon.com.tr/s?k=mouse&i=computers&bbn=44219324031&rh=n%3A12602040031%2Cp_123%3A213704%257C220854%257C395698%257C6037502&dc&ds=v1%3Adjp8PNEniZjEc8BVP147wVdYDnip%2BbU2rBPHZQMN1Zc"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
@@ -65,7 +65,7 @@ def check_timeout():
             print("📡 Scraper B tetiklendi.")
         except Exception as e:
             print(f"❌ Scraper B tetiklenemedi: {e}")
-        exit()
+        raise TimeoutError("Zincir süresi doldu")
 def get_driver():
     check_timeout()
     options = Options()
@@ -103,6 +103,7 @@ def get_used_price_from_detail(driver):
         return None
 
 def get_final_price(driver, link):
+    check_timeout()
     try:
         driver.execute_script("window.open('');")
         driver.switch_to.window(driver.window_handles[1])
@@ -144,9 +145,12 @@ def run():
         return
 
     driver = get_driver()
+    check_timeout()
+
     driver.get(URL)
     time.sleep(2)
     load_cookies(driver)
+    check_timeout()
     driver.get(URL)
     try:
         WebDriverWait(driver, 35).until(
@@ -236,10 +240,14 @@ def run():
     if products_to_send:
         for p in products_to_send:
             send_message(p)
+            run_capture(p)
         save_sent_data(sent_data)
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
     else:
         print("⚠️ Yeni veya indirimli ürün bulunamadı.")
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except TimeoutError as e:
+        print(f"⏹️ Zincir durduruldu: {e}")
